@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+
+  mysql:
+    image: mysql:8.4
+    ports:
+      - "${FORWARD_DB_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-terrasense}"
+      MYSQL_DATABASE: "${DB_DATABASE:-terrasense}"
+      MYSQL_USER: "${DB_USERNAME:-terrasense}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-terrasense}"
+    volumes:
+      - terrasense-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${FORWARD_REDIS_PORT:-6379}:6379"
+    volumes:
+      - terrasense-redis:/data
+
+volumes:
+  terrasense-mysql:
+  terrasense-redis:
