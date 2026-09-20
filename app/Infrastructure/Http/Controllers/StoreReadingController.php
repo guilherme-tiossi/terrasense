@@ -30,7 +30,7 @@ class StoreReadingController extends Controller
             ));
         // handler global de exceção
         } catch (ModelNotFoundException) {
-            return response()->json(['message' => 'User plant not found.'], Response::HTTP_NOT_FOUND);
+            return response()->json(['message' => 'Planta do usuário não encontrada.'], Response::HTTP_NOT_FOUND);
         }
 
         return response()->json([

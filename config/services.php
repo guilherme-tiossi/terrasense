@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'weatherapi' => [
+        'forecast_url' => env(
+            'WEATHERAPI_FORECAST_URL',
+            'https://api.weatherapi.com/v1/forecast.json',
+        ),
+        'key' => env('WEATHERAPI_KEY'),
+        'timeout_seconds' => (int) env('WEATHERAPI_TIMEOUT_SECONDS', 10),
+    ],
+
 ];

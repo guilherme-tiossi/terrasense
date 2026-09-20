@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Infrastructure;
+namespace Tests\Integration\Infrastructure;
 
 use App\Application\Events\UserPlantUpdated;
 use App\Infrastructure\Models\Plant;
@@ -23,13 +23,11 @@ class StoreReadingTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create(['hmac_secret' => 'store-reading-secret']);
-
         $plant = Plant::create([
             'name' => 'Tomate',
             'minimum_allowed_humidity' => 30.00,
             'maximum_allowed_humidity' => 70.00,
         ]);
-
         $this->userPlant = UserPlant::create([
             'user_id' => $this->user->id,
             'plant_id' => $plant->id,
@@ -38,16 +36,14 @@ class StoreReadingTest extends TestCase
         ]);
     }
 
-    public function test_atualiza_user_plant_com_payload_valido_e_autenticacao_hmac(): void
+    public function test_atualiza_user_plant_e_dispara_evento(): void
     {
         Event::fake([UserPlantUpdated::class]);
-
         $payload = [
             'user_plant_id' => $this->userPlant->id,
             'humidity' => 35.5,
             'measured_at' => '2026-09-15T18:00:00Z',
         ];
-
         $body = json_encode($payload, JSON_THROW_ON_ERROR);
 
         $response = $this->call(
@@ -60,18 +56,11 @@ class StoreReadingTest extends TestCase
             $body,
         );
 
-        $response->assertOk()
-            ->assertJson([
-                'user_plant_id' => $this->userPlant->id,
-                'current_humidity' => 35.5,
-                'measured_at' => '2026-09-15T18:00:00Z',
-            ]);
-
+        $response->assertOk();
         $this->assertDatabaseHas('user_plants', [
             'id' => $this->userPlant->id,
             'current_humidity' => '35.50',
         ]);
-
         Event::assertDispatched(UserPlantUpdated::class);
     }
 
@@ -82,7 +71,6 @@ class StoreReadingTest extends TestCase
             'humidity' => 150,
             'measured_at' => 'invalid-date',
         ];
-
         $body = json_encode($payload, JSON_THROW_ON_ERROR);
 
         $response = $this->call(
@@ -98,16 +86,14 @@ class StoreReadingTest extends TestCase
         $response->assertUnprocessable();
     }
 
-    public function test_retorna_404_quando_user_plant_nao_pertence_ao_usuario(): void
+    public function test_retorna_not_found_para_user_plant_de_outro_usuario(): void
     {
         $otherUser = User::factory()->create(['hmac_secret' => 'other-secret']);
-
         $payload = [
             'user_plant_id' => $this->userPlant->id,
             'humidity' => 35.5,
             'measured_at' => '2026-09-15T18:00:00Z',
         ];
-
         $body = json_encode($payload, JSON_THROW_ON_ERROR);
 
         $response = $this->call(

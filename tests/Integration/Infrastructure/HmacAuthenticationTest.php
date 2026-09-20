@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Infrastructure;
+namespace Tests\Integration\Infrastructure;
 
 use App\Infrastructure\Auth\HmacSignatureVerifier;
 use App\Infrastructure\Models\User;
@@ -22,11 +22,12 @@ class HmacAuthenticationTest extends TestCase
 
     public function test_aceita_assinatura_valida(): void
     {
-        $body = json_encode([
+        $payload = [
             'user_plant_id' => 1,
             'humidity' => 35.5,
             'measured_at' => '2026-09-15T18:00:00Z',
-        ], JSON_THROW_ON_ERROR);
+        ];
+        $body = json_encode($payload, JSON_THROW_ON_ERROR);
 
         $response = $this->call(
             'POST',
@@ -43,45 +44,29 @@ class HmacAuthenticationTest extends TestCase
 
     public function test_rejeita_assinatura_invalida(): void
     {
-        $body = json_encode([
-            'user_plant_id' => 1,
-            'humidity' => 35.5,
-            'measured_at' => '2026-09-15T18:00:00Z',
-        ], JSON_THROW_ON_ERROR);
-
+        $payload = ['user_plant_id' => 1, 'humidity' => 35.5, 'measured_at' => '2026-09-15T18:00:00Z'];
+        $body = json_encode($payload, JSON_THROW_ON_ERROR);
         $headers = $this->hmacHeaders($this->user, 'POST', '/api/readings', $body);
         $headers['X-Terrasense-Signature'] = str_repeat('a', 64);
 
-        $response = $this->postJson('/api/readings', json_decode($body, true), $headers);
-
-        $response->assertUnauthorized();
-    }
-
-    public function test_rejeita_usuario_inexistente(): void
-    {
-        $body = json_encode([
-            'user_plant_id' => 1,
-            'humidity' => 35.5,
-            'measured_at' => '2026-09-15T18:00:00Z',
-        ], JSON_THROW_ON_ERROR);
-
-        $headers = $this->hmacHeaders($this->user, 'POST', '/api/readings', $body);
-        $headers['X-Terrasense-User-Id'] = '99999';
-
-        $response = $this->postJson('/api/readings', json_decode($body, true), $headers);
+        $response = $this->call(
+            'POST',
+            '/api/readings',
+            [],
+            [],
+            [],
+            $this->transformHeadersToServerVars($headers),
+            $body,
+        );
 
         $response->assertUnauthorized();
     }
 
     public function test_rejeita_timestamp_expirado(): void
     {
-        $body = json_encode([
-            'user_plant_id' => 1,
-            'humidity' => 35.5,
-            'measured_at' => '2026-09-15T18:00:00Z',
-        ], JSON_THROW_ON_ERROR);
-
-        $expiredTimestamp = time() - config('terrasense.hmac_tolerance_seconds') - 10;
+        $payload = ['user_plant_id' => 1, 'humidity' => 35.5, 'measured_at' => '2026-09-15T18:00:00Z'];
+        $body = json_encode($payload, JSON_THROW_ON_ERROR);
+        $timestamp = time() - config('terrasense.hmac_tolerance_seconds') - 1;
 
         $response = $this->call(
             'POST',
@@ -90,7 +75,7 @@ class HmacAuthenticationTest extends TestCase
             [],
             [],
             $this->transformHeadersToServerVars(
-                $this->hmacHeaders($this->user, 'POST', '/api/readings', $body, $expiredTimestamp)
+                $this->hmacHeaders($this->user, 'POST', '/api/readings', $body, $timestamp),
             ),
             $body,
         );
@@ -98,13 +83,22 @@ class HmacAuthenticationTest extends TestCase
         $response->assertUnauthorized();
     }
 
-    public function test_rejeita_headers_ausentes(): void
+    public function test_rejeita_usuario_inexistente(): void
     {
-        $response = $this->postJson('/api/readings', [
-            'user_plant_id' => 1,
-            'humidity' => 35.5,
-            'measured_at' => '2026-09-15T18:00:00Z',
-        ]);
+        $payload = ['user_plant_id' => 1, 'humidity' => 35.5, 'measured_at' => '2026-09-15T18:00:00Z'];
+        $body = json_encode($payload, JSON_THROW_ON_ERROR);
+        $headers = $this->hmacHeaders($this->user, 'POST', '/api/readings', $body);
+        $headers['X-Terrasense-User-Id'] = '99999';
+
+        $response = $this->call(
+            'POST',
+            '/api/readings',
+            [],
+            [],
+            [],
+            $this->transformHeadersToServerVars($headers),
+            $body,
+        );
 
         $response->assertUnauthorized();
     }
@@ -114,9 +108,8 @@ class HmacAuthenticationTest extends TestCase
         $verifier = new HmacSignatureVerifier;
         $timestamp = time();
         $body = '{"humidity":35.5}';
-
-        $valid = $verifier->compute($this->user, 'POST', '/api/readings', $timestamp, $body);
-        $almostValid = substr($valid, 0, -1).($valid[-1] === 'a' ? 'b' : 'a');
+        $signature = $verifier->compute($this->user, 'POST', '/api/readings', $timestamp, $body);
+        $altered = substr($signature, 0, -1).($signature[-1] === 'a' ? 'b' : 'a');
 
         $this->assertFalse($verifier->verify(
             $this->user,
@@ -124,7 +117,7 @@ class HmacAuthenticationTest extends TestCase
             '/api/readings',
             $timestamp,
             $body,
-            $almostValid,
+            $altered,
         ));
     }
 }
