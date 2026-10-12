@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Application\Listeners;
+namespace App\Application\Irrigation\Listeners;
 
-use App\Application\Events\UserPlantUpdated;
-use App\Application\UseCases\ProcessIrrigationDecision\ProcessIrrigationDecision;
-use App\Application\UseCases\ProcessIrrigationDecision\ProcessIrrigationDecisionInputDto;
+use App\Application\Irrigation\UseCases\ProcessIrrigationDecision\ProcessIrrigationDecision;
+use App\Application\Irrigation\UseCases\ProcessIrrigationDecision\ProcessIrrigationDecisionInputDto;
+use App\Application\Readings\Events\UserPlantUpdated;
 
 class HandleUserPlantUpdated
 {

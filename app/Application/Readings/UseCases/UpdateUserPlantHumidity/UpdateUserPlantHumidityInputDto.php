@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Application\UseCases\UpdateUserPlantHumidity;
+namespace App\Application\Readings\UseCases\UpdateUserPlantHumidity;
 
 readonly class UpdateUserPlantHumidityInputDto
 {

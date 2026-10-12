@@ -2,13 +2,13 @@
 
 namespace Tests\Integration\Application;
 
-use App\Application\Events\IrrigationDecisionMade;
-use App\Application\Events\UserPlantUpdated;
-use App\Application\Listeners\HandleUserPlantUpdated;
+use App\Application\Irrigation\Events\IrrigationDecisionMade;
+use App\Application\Irrigation\Listeners\HandleUserPlantUpdated;
+use App\Application\Readings\Events\UserPlantUpdated;
+use App\Domain\Irrigation\Enums\IrrigationDecision;
 use App\Infrastructure\Models\Plant;
 use App\Infrastructure\Models\User;
 use App\Infrastructure\Models\UserPlant;
-use App\Domain\Irrigation\Enums\IrrigationDecision;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Redis;

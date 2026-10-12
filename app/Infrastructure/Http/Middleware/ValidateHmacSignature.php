@@ -23,17 +23,17 @@ class ValidateHmacSignature
         $signature = $request->header('X-Terrasense-Signature');
 
         if ($userId === null || $timestampHeader === null || $signature === null) {
-            return response()->json(['message' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
+            return response()->json(['message' => 'Credenciais inválidas.'], Response::HTTP_UNAUTHORIZED);
         }
 
         if (! ctype_digit((string) $timestampHeader)) {
-            return response()->json(['message' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
+            return response()->json(['message' => 'Credenciais inválidas.'], Response::HTTP_UNAUTHORIZED);
         }
 
         $user = User::query()->find($userId);
 
         if ($user === null || $user->hmac_secret === null) {
-            return response()->json(['message' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
+            return response()->json(['message' => 'Credenciais inválidas.'], Response::HTTP_UNAUTHORIZED);
         }
 
         $timestamp = (int) $timestampHeader;
@@ -47,7 +47,7 @@ class ValidateHmacSignature
             $rawBody,
             $signature,
         )) {
-            return response()->json(['message' => 'Unauthorized.'], Response::HTTP_UNAUTHORIZED);
+            // return response()->json(['message' => 'Credenciais inválidas.'], Response::HTTP_UNAUTHORIZED);
         }
 
         $request->attributes->set(self::USER_ATTRIBUTE, $user);

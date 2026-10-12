@@ -2,13 +2,13 @@
 
 namespace Tests\Integration\Application;
 
-use App\Application\Events\UserPlantUpdated;
-use App\Application\UseCases\UpdateUserPlantHumidity\UpdateUserPlantHumidity;
-use App\Application\UseCases\UpdateUserPlantHumidity\UpdateUserPlantHumidityInputDto;
+use App\Application\Readings\Events\UserPlantUpdated;
+use App\Application\Readings\UseCases\UpdateUserPlantHumidity\UpdateUserPlantHumidity;
+use App\Application\Readings\UseCases\UpdateUserPlantHumidity\UpdateUserPlantHumidityInputDto;
+use App\Exceptions\AppException;
 use App\Infrastructure\Models\Plant;
 use App\Infrastructure\Models\User;
 use App\Infrastructure\Models\UserPlant;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
@@ -18,6 +18,7 @@ class UpdateUserPlantHumidityTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private UserPlant $userPlant;
 
     protected function setUp(): void
@@ -42,7 +43,7 @@ class UpdateUserPlantHumidityTest extends TestCase
     {
         Event::fake([UserPlantUpdated::class]);
 
-        $output = (new UpdateUserPlantHumidity)->execute(new UpdateUserPlantHumidityInputDto(
+        $output = app(UpdateUserPlantHumidity::class)->execute(new UpdateUserPlantHumidityInputDto(
             userId: $this->user->id,
             userPlantId: $this->userPlant->id,
             humidity: 35.5,
@@ -61,9 +62,9 @@ class UpdateUserPlantHumidityTest extends TestCase
     public function test_nao_atualiza_user_plant_de_outro_usuario(): void
     {
         $otherUser = User::factory()->create();
-        $this->expectException(ModelNotFoundException::class);
+        $this->expectException(AppException::class);
 
-        (new UpdateUserPlantHumidity)->execute(new UpdateUserPlantHumidityInputDto(
+        app(UpdateUserPlantHumidity::class)->execute(new UpdateUserPlantHumidityInputDto(
             userId: $otherUser->id,
             userPlantId: $this->userPlant->id,
             humidity: 35.5,

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Application\Events;
+namespace App\Application\Irrigation\Events;
 
 use App\Domain\Irrigation\Enums\IrrigationDecision;
 use Illuminate\Foundation\Events\Dispatchable;

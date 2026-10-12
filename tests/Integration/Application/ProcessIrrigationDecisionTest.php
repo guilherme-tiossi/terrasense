@@ -2,10 +2,11 @@
 
 namespace Tests\Integration\Application;
 
-use App\Application\Events\IrrigationDecisionMade;
-use App\Application\UseCases\ProcessIrrigationDecision\ProcessIrrigationDecision;
-use App\Application\UseCases\ProcessIrrigationDecision\ProcessIrrigationDecisionInputDto;
+use App\Application\Irrigation\Events\IrrigationDecisionMade;
+use App\Application\Irrigation\UseCases\ProcessIrrigationDecision\ProcessIrrigationDecision;
+use App\Application\Irrigation\UseCases\ProcessIrrigationDecision\ProcessIrrigationDecisionInputDto;
 use App\Domain\Irrigation\Enums\IrrigationDecision;
+use App\Exceptions\AppException;
 use App\Infrastructure\Models\Plant;
 use App\Infrastructure\Models\User;
 use App\Infrastructure\Models\UserPlant;
@@ -82,5 +83,14 @@ class ProcessIrrigationDecisionTest extends TestCase
         );
 
         $this->assertSame(IrrigationDecision::NoAction, $output->decision);
+    }
+
+    public function test_user_plant_inexistente_lanca_excecao(): void
+    {
+        $this->expectException(AppException::class);
+
+        app(ProcessIrrigationDecision::class)->execute(
+            new ProcessIrrigationDecisionInputDto(999999),
+        );
     }
 }

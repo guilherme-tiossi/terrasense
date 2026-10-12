@@ -6,6 +6,7 @@ use App\Infrastructure\Models\Plant;
 use App\Infrastructure\Models\User;
 use App\Infrastructure\Models\UserPlant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 class DataModelTest extends TestCase
@@ -43,6 +44,8 @@ class DataModelTest extends TestCase
         $this->assertSame('70.00', $loaded->plant->maximum_allowed_humidity);
         $this->assertSame('sao_paulo', $loaded->location_key);
         $this->assertSame('test-hmac-secret', $loaded->user->hmac_secret);
+        $this->assertCount(1, $loaded->user->userPlants);
+        $this->assertCount(1, $loaded->plant->userPlants);
     }
 
     public function test_same_plant_can_have_multiple_user_plants_in_different_locations(): void
@@ -69,5 +72,38 @@ class DataModelTest extends TestCase
         ]);
 
         $this->assertSame(2, UserPlant::where('plant_id', $plant->id)->count());
+    }
+
+    public function test_rejeita_limites_de_planta_invalidos(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        Plant::create([
+            'name' => 'Tomate',
+            'minimum_allowed_humidity' => 70.00,
+            'maximum_allowed_humidity' => 30.00,
+        ]);
+    }
+
+    public function test_rejeita_limites_acima_de_cem(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        Plant::create([
+            'name' => 'Tomate',
+            'minimum_allowed_humidity' => 30.00,
+            'maximum_allowed_humidity' => 101.00,
+        ]);
+    }
+
+    public function test_rejeita_limites_abaixo_de_zero(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        Plant::create([
+            'name' => 'Tomate',
+            'minimum_allowed_humidity' => -1.00,
+            'maximum_allowed_humidity' => 70.00,
+        ]);
     }
 }

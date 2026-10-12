@@ -2,13 +2,13 @@
 
 namespace App\Infrastructure\Http\Controllers;
 
+use App\Application\Readings\UseCases\UpdateUserPlantHumidity\UpdateUserPlantHumidity;
+use App\Application\Readings\UseCases\UpdateUserPlantHumidity\UpdateUserPlantHumidityInputDto;
+use App\Exceptions\AppException;
 use App\Http\Controllers\Controller;
-use App\Application\UseCases\UpdateUserPlantHumidity\UpdateUserPlantHumidity;
-use App\Application\UseCases\UpdateUserPlantHumidity\UpdateUserPlantHumidityInputDto;
 use App\Infrastructure\Http\Middleware\ValidateHmacSignature;
 use App\Infrastructure\Http\Requests\StoreReadingRequest;
 use App\Infrastructure\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -28,8 +28,7 @@ class StoreReadingController extends Controller
                 humidity: $request->float('humidity'),
                 measuredAt: $request->string('measured_at')->toString(),
             ));
-        // handler global de exceção
-        } catch (ModelNotFoundException) {
+        } catch (AppException) {
             return response()->json(['message' => 'Planta do usuário não encontrada.'], Response::HTTP_NOT_FOUND);
         }
 

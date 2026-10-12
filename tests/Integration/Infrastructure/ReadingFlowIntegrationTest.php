@@ -2,7 +2,7 @@
 
 namespace Tests\Integration\Infrastructure;
 
-use App\Application\Events\IrrigationDecisionMade;
+use App\Application\Irrigation\Events\IrrigationDecisionMade;
 use App\Domain\Irrigation\Enums\IrrigationDecision;
 use App\Infrastructure\Models\Plant;
 use App\Infrastructure\Models\User;

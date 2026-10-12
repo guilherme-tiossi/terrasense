@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Application\UseCases\UpdateUserPlantHumidity;
+namespace App\Application\Readings\UseCases\UpdateUserPlantHumidity;
 
-use App\Application\Events\UserPlantUpdated;
+use App\Application\Readings\Events\UserPlantUpdated;
+use App\Exceptions\AppException;
 use App\Infrastructure\Models\UserPlant;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UpdateUserPlantHumidity
 {
@@ -13,17 +13,20 @@ class UpdateUserPlantHumidity
         $userPlant = UserPlant::query()
             ->where('id', $input->userPlantId)
             ->where('user_id', $input->userId)
-            ->first() ?? throw new ModelNotFoundException('Planta não encontrada.');
+            ->first();
+
+        if ($userPlant === null) {
+            throw new AppException('Planta não encontrada.');
+        }
 
         $userPlant->update(['current_humidity' => $input->humidity]);
+        $userPlant->refresh();
 
-        event(new UserPlantUpdated(
-            userPlantId: $userPlant->id
-        ));
+        UserPlantUpdated::dispatch(userPlantId: $userPlant->id);
 
         return new UpdateUserPlantHumidityOutputDto(
             userPlantId: $userPlant->id,
-            currentHumidity: $userPlant->current_humidity,
+            currentHumidity: (float) $userPlant->current_humidity,
             measuredAt: $input->measuredAt,
         );
     }

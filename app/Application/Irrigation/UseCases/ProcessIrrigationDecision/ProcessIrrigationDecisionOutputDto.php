@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Application\UseCases\ProcessIrrigationDecision;
+namespace App\Application\Irrigation\UseCases\ProcessIrrigationDecision;
 
 use App\Domain\Irrigation\Enums\IrrigationDecision;
 

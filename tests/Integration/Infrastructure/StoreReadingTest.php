@@ -2,7 +2,7 @@
 
 namespace Tests\Integration\Infrastructure;
 
-use App\Application\Events\UserPlantUpdated;
+use App\Application\Readings\Events\UserPlantUpdated;
 use App\Infrastructure\Models\Plant;
 use App\Infrastructure\Models\User;
 use App\Infrastructure\Models\UserPlant;

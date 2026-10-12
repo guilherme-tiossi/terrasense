@@ -62,6 +62,33 @@ class HmacAuthenticationTest extends TestCase
         $response->assertUnauthorized();
     }
 
+    public function test_rejeita_headers_de_autenticacao_ausentes(): void
+    {
+        $response = $this->postJson('/api/readings', []);
+
+        $response->assertUnauthorized();
+    }
+
+    public function test_rejeita_timestamp_nao_numerico(): void
+    {
+        $payload = ['user_plant_id' => 1, 'humidity' => 35.5, 'measured_at' => '2026-09-15T18:00:00Z'];
+        $body = json_encode($payload, JSON_THROW_ON_ERROR);
+        $headers = $this->hmacHeaders($this->user, 'POST', '/api/readings', $body);
+        $headers['X-Terrasense-Timestamp'] = 'invalid';
+
+        $response = $this->call(
+            'POST',
+            '/api/readings',
+            [],
+            [],
+            [],
+            $this->transformHeadersToServerVars($headers),
+            $body,
+        );
+
+        $response->assertUnauthorized();
+    }
+
     public function test_rejeita_timestamp_expirado(): void
     {
         $payload = ['user_plant_id' => 1, 'humidity' => 35.5, 'measured_at' => '2026-09-15T18:00:00Z'];

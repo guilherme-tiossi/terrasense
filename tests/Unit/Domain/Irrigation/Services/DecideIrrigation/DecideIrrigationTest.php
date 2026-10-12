@@ -59,4 +59,18 @@ class DecideIrrigationTest extends TestCase
 
         $this->assertSame(IrrigationDecision::NoAction, $decision);
     }
+
+    public function test_rejeita_limites_invertidos(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new DecideIrrigationInput(50, 70, 30, false);
+    }
+
+    public function test_rejeita_umidade_fora_do_intervalo(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new DecideIrrigationInput(101, 30, 70, false);
+    }
 }

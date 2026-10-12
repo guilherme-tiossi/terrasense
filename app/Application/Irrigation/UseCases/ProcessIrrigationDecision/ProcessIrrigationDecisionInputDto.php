@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Application\UseCases\ProcessIrrigationDecision;
+namespace App\Application\Irrigation\UseCases\ProcessIrrigationDecision;
 
 readonly class ProcessIrrigationDecisionInputDto
 {

@@ -5,6 +5,7 @@ namespace Tests\Integration\Infrastructure;
 use App\Infrastructure\Weather\WeatherApiProvider;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 use Tests\TestCase;
 
 class WeatherApiProviderTest extends TestCase
@@ -38,5 +39,19 @@ class WeatherApiProviderTest extends TestCase
                 && $request['aqi'] === 'no'
                 && $request['alerts'] === 'no';
         });
+    }
+
+    public function test_rejeita_payload_invalido_da_weatherapi(): void
+    {
+        Http::fake([
+            'https://api.weatherapi.com/v1/forecast.json*' => Http::response([
+                'current' => ['temp_c' => 'invalid'],
+                'forecast' => [],
+            ]),
+        ]);
+
+        $this->expectException(RuntimeException::class);
+
+        app(WeatherApiProvider::class)->getWeather('São Paulo');
     }
 }

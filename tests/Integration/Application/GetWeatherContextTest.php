@@ -60,4 +60,19 @@ class GetWeatherContextTest extends TestCase
         $this->assertSame('cache-time', $output->fetchedAt);
         $this->assertSame(0, app(FakeWeatherProvider::class)->calls());
     }
+
+    public function test_ignora_cache_malformado_e_consulta_provider(): void
+    {
+        $this->configureFakeWeather(21.5, false, 'provider-time');
+        Redis::set('weather:sao_paulo', json_encode([
+            'temperature' => 'invalid',
+        ], JSON_THROW_ON_ERROR));
+
+        $output = $this->service->execute(new GetWeatherContextInputDto(
+            locationKey: 'sao_paulo',
+        ));
+
+        $this->assertSame(21.5, $output->temperature);
+        $this->assertSame(1, app(FakeWeatherProvider::class)->calls());
+    }
 }
